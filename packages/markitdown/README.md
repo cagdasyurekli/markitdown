@@ -50,3 +50,10 @@ trademarks or logos is subject to and must follow
 [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.
+
+### Audio transcription providers
+
+Without a transcription client, audio transcription uses Google Speech Recognition.
+When an `llm_client` with an audio transcription API is supplied, recordings are sent
+to that client only; authentication, network, and client errors do not trigger a
+fallback to Google. The result uses the generic `Audio Transcript` heading.

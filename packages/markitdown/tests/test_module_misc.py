@@ -333,33 +333,15 @@ def test_speech_transcription() -> None:
     reason="do not run llm tests without a key",
 )
 def test_whisper_transcription() -> None:
-    """Test OpenAI Whisper transcription with fallback to Google Speech Recognition."""
-    try:
-        from openai import OpenAI
-        client = OpenAI()
-        markitdown = MarkItDown(llm_client=client)
+    """Test transcription through an explicitly configured OpenAI client."""
+    from openai import OpenAI
 
-        # Test WAV file with Whisper
-        result = markitdown.convert(os.path.join(TEST_FILES_DIR, "test.wav"))
-        
-        # Verify Whisper was used
-        assert "Audio Transcript (Whisper):" in result.text_content
-        
+    markitdown = MarkItDown(llm_client=OpenAI())
+    for filename in ("test.wav", "test.mp3"):
+        result = markitdown.convert(os.path.join(TEST_FILES_DIR, filename))
+        assert "Audio Transcript:" in result.text_content
         result_lower = result.text_content.lower()
-        expected_phrases = [
-            "small step",
-            "mankind"
-        ]
-        
-        # At least one of the expected phrases should be found
-        assert any(phrase in result_lower for phrase in expected_phrases), \
-            f"None of the expected phrases found in: {result_lower}"
-        
-        # Test MP3 file with Whisper
-        result = markitdown.convert(os.path.join(TEST_FILES_DIR, "test.mp3"))
-        assert "Audio Transcript (Whisper):" in result.text_content
-    except Exception as e:
-        pytest.skip(f"Whisper test failed: {str(e)}")
+        assert any(phrase in result_lower for phrase in ("small step", "mankind"))
 
 
 def test_exceptions() -> None:
