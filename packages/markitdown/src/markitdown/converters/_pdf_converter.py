@@ -80,7 +80,9 @@ def _contains_inline_image(pdf_bytes: bytes) -> bool:
     # from the raw-byte search. Decode every Flate stream and look again.
     for match in INLINE_IMAGE_STREAM_PATTERN.finditer(pdf_bytes):
         try:
-            decoded = zlib.decompress(match.group(1).rstrip(b"\r\n"))
+            # Trailing CR/LF may belong to the binary checksum. zlib ignores
+            # the PDF delimiter after its end-of-stream marker.
+            decoded = zlib.decompress(match.group(1))
         except zlib.error:
             continue
         if _has_inline_image_operators(decoded):
@@ -117,7 +119,10 @@ def _maybe_recover_inline_image_text(pdf_bytes: bytes, markdown: str) -> str:
         return markdown
 
     current_len = len((markdown or "").strip())
-    if len(pymupdf_text) > current_len * PYMUPDF_RECOVERY_RATIO + PYMUPDF_RECOVERY_MARGIN:
+    if (
+        len(pymupdf_text)
+        > current_len * PYMUPDF_RECOVERY_RATIO + PYMUPDF_RECOVERY_MARGIN
+    ):
         return pymupdf_text
 
     return markdown
@@ -596,7 +601,9 @@ class PdfConverter(DocumentConverter):
                     extension=".pdf",
                     feature="pdf",
                 )
-            ) from _dependency_exc_info[1].with_traceback(  # type: ignore[union-attr]
+            ) from _dependency_exc_info[
+                1
+            ].with_traceback(  # type: ignore[union-attr]
                 _dependency_exc_info[2]
             )
 
